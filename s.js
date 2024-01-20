@@ -3,49 +3,56 @@ function handleFiltering() {
     var filterContainer = document.querySelector(".gallery-filter");
     var galleryItems = document.querySelectorAll(".gallery-item");
     var isFirstClick = true;
+    var activeFilterItem = null;
+
+    function removeAllActiveClasses() {
+        filterContainer.querySelectorAll(".filter-item").forEach(function (item) {
+            item.classList.remove("active");
+        });
+    }
+
+    function filterGalleryItems(filterValue) {
+        galleryItems.forEach(function (item) {
+            if (filterValue === 'all' || item.id === filterValue) {
+                item.classList.remove("hide");
+                item.classList.add("show");
+            } else {
+                item.classList.remove("show");
+                item.classList.add("hide");
+            }
+        });
+    }
 
     filterContainer.addEventListener("click", function (event) {
-        var allFilterItem = filterContainer.querySelector("[data-filter='all']");
-        allFilterItem.classList.add("active");
-
         if (event.target.classList.contains("filter-item")) {
-            if (isFirstClick == true) {
-                filterContainer.querySelector(".active").classList.remove("active");
-                event.target.classList.add("active");
-                var filterValue = event.target.getAttribute("data-filter");
-    
-                galleryItems.forEach(function (item) {
-                    if (filterValue === 'all' || item.id === filterValue) {
-                        item.classList.remove("hide");
-                        item.classList.add("show");
-                    } else {
-                        item.classList.remove("show");
-                        item.classList.add("hide");
-                    }
-            });
-            isFirstClick = false;
-            }
+            var filterValue = event.target.getAttribute("data-filter");
 
-            else if (isFirstClick == false) {
-                if (event.target.classList.contains("filter-item")) {
-                    event.target.classList.remove("active");
-                }
-                filterContainer.querySelector("[data-filter='all']");
-                allFilterItem.classList.add("active");
-                galleryItems.forEach(function (item) {
+            if (isFirstClick) {
+                removeAllActiveClasses();
+                event.target.classList.add("active");
+                activeFilterItem = event.target;
+                filterGalleryItems(filterValue);
+                isFirstClick = false;
+            } else {
+                if (event.target === activeFilterItem) {
+                    removeAllActiveClasses();
+                    allFilterItem.classList.add("active");
                     filterValue = 'all';
-                    if (filterValue === 'all') {
-                        item.classList.remove("hide");
-                        item.classList.add("show");
-                    } else {
-                        item.classList.remove("show");
-                        item.classList.add("hide");
-                    }
-                });
-                isFirstClick = true;
+                    filterGalleryItems(filterValue);
+                    isFirstClick = true;
+                } else {
+                    removeAllActiveClasses();
+                    event.target.classList.add("active");
+                    activeFilterItem = event.target;
+                    filterGalleryItems(filterValue);
+                    isFirstClick = false;
+                }
             }
         }
     });
+
+    var allFilterItem = filterContainer.querySelector("[data-filter='all']");
+    allFilterItem.classList.add("active");
 }
 
 handleFiltering();
