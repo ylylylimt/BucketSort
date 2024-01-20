@@ -57,6 +57,42 @@ function handleFiltering() {
 
 handleFiltering();
 
+function sortYears() {
+    var filterContainer = document.querySelector(".gallery-filter");
+    var years = [];
+
+    filterContainer.querySelectorAll(".filter-item[data-filter]").forEach(function (item) {
+        var year = parseInt(item.getAttribute("data-filter"), 10);
+        if (!isNaN(year) && years.indexOf(year) === -1) {
+            years.push(year);
+        }
+    });
+
+    years.sort(function (a, b) {
+        return a - b;
+    });
+
+    var allFilterItem = filterContainer.querySelector("[data-filter='all']");
+    filterContainer.insertBefore(allFilterItem, filterContainer.firstChild);
+
+    filterContainer.querySelectorAll(".filter-item[data-filter]").forEach(function (item) {
+        item.parentNode.removeChild(item);
+    });
+
+    years.forEach(function (year) {
+        var filterItem = document.createElement("span");
+        filterItem.className = "filter-item";
+        filterItem.setAttribute("data-filter", year.toString());
+        filterItem.textContent = year.toString();
+        filterContainer.appendChild(filterItem);
+    });
+
+    allFilterItem.classList.add("active");
+    filterContainer.appendChild(allFilterItem);
+}
+
+sortYears();
+
 // MODAL https://www.w3schools.com/howto/howto_css_modals.asp
 var modal = document.getElementById("myModal");
 var btn = document.getElementById("myBtn");
@@ -189,6 +225,7 @@ fetch(url)
       console.log('No authors found in the response.');
     }
     handleFiltering();
+    sortYears();
   })
   .catch(function (error) {
     console.log(error);
@@ -216,29 +253,25 @@ document.getElementById("resetBtn").addEventListener("click", function () {
   });
 
 // UPDATE BUTTON  
-
 function updateItem(itemId) {
-    // Assuming the endpoint for updating an item is https://webtech.labs.vu.nl/api24/45bc18aa/item/{itemId}
     const updateUrl = `https://webtech.labs.vu.nl/api24/45bc18aa/item/${itemId}`;
 
     openModal();
-    var nameInput = document.getElementById("name");
-    var yearInput = document.getElementById("year");
-    var posterInput = document.getElementById("poster");
-    var genreInput = document.getElementById("genre");
-    var descriptionInput = document.getElementById("description");
 
+    // Event listener for form submission
     document.getElementById("add-item-form").addEventListener("submit", function (event) {
         event.preventDefault();
 
+        // Get the updated data from the form
         var updatedFormData = {
-            name: nameInput.value,
-            year: yearInput.value,
-            poster: posterInput.value,
-            genre: genreInput.value,
-            description: descriptionInput.value
+            name: document.getElementById("name").value,
+            year: document.getElementById("year").value,
+            poster: document.getElementById("poster").value,
+            genre: document.getElementById("genre").value,
+            description: document.getElementById("description").value
         };
 
+        // PUT request to update the item
         let updateRequest = new Request(updateUrl, {
             method: 'PUT',
             body: JSON.stringify(updatedFormData),
@@ -251,7 +284,23 @@ function updateItem(itemId) {
             .then(function (response) {
                 if (response.ok) {
                     console.log(`Item with ID ${itemId} updated successfully`);
-                    closeModal(); 
+
+                    // Remove the existing HTML element representing the old version
+                    var oldItemElement = document.getElementById(itemId);
+                    if (oldItemElement) {
+                        oldItemElement.remove();
+                    }
+
+                    // Append a new HTML element with the updated data to the appropriate location
+                    var newRow = document.createElement('div');
+                    newRow.className = 'row';
+
+                    var updatedItemElement = createGalleryItem(updatedFormData);
+                    newRow.appendChild(updatedItemElement);
+
+                    document.querySelector('.container-gallery').appendChild(newRow);
+
+                    closeModal(); // Close the modal after successful update
                 } else {
                     console.error(`Error updating item with ID ${itemId}`);
                 }
@@ -262,8 +311,49 @@ function updateItem(itemId) {
     });
 }
 
-  
-  function searchFunction() {
+// Helper function to create a gallery item HTML element
+function createGalleryItem(itemData) {
+    var galleryItem = document.createElement('div');
+    galleryItem.className = 'gallery-item';
+    galleryItem.id = itemData.year;
+
+    var galleryItemInner = document.createElement('div');
+    galleryItemInner.className = 'gallery-item-inner';
+
+    var search = document.createElement('div');
+    search.className = 'search';
+
+    var name = document.createElement('div');
+    name.innerHTML = itemData.name;
+
+    var year = document.createElement('div');
+    year.innerHTML = itemData.year;
+
+    var genre = document.createElement('div');
+    genre.innerHTML = itemData.genre;
+
+    var poster = document.createElement('img');
+    poster.src = itemData.poster;
+
+    var description = document.createElement('p');
+    description.innerHTML = itemData.description;
+
+    search.appendChild(name);
+    search.appendChild(year);
+    search.appendChild(genre);
+
+    galleryItemInner.appendChild(search);
+    galleryItemInner.appendChild(poster);
+    galleryItemInner.appendChild(description);
+
+    galleryItem.appendChild(galleryItemInner);
+
+    return galleryItem;
+}
+
+
+
+function searchFunction() {
     var input, filter, gallery, items, i, name;
     input = document.getElementById('searchInput');
     filter = input.value.replace(/\s/g, '').toUpperCase();
@@ -284,7 +374,7 @@ function updateItem(itemId) {
         items[i].style.display = "none";
       }
     }
-  }
+}
   
   
   
